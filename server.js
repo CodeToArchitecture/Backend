@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs').promises;
 const axios = require('axios');
+const archiver = require('archiver');
 const GitHubRepoParser = require('github-repo-parser');
 
 const app = express();
@@ -56,7 +57,17 @@ app.post('/download-files', async (req, res) => {
       await fs.writeFile(`${overviewFilesDir}/${fileName}`, response.data, { flag: 'w' });
     }
 
-    res.json({ message: 'Files downloaded successfully' });
+    const zipFilePath = 'overview_files.zip';
+    const output = fs.createWriteStream(zipFilePath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => { throw err; });
+    archive.pipe(output);
+
+    archive.directory(overviewFilesDir, false);
+    await archive.finalize();
+
+    res.json({ message: 'Files downloaded and zipped successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
