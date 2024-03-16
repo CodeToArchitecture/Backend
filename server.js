@@ -1,5 +1,6 @@
 const express = require('express');
-const fs = require('fs').promises;
+const fs = require('fs');
+const fsp = require('fs').promises;
 const axios = require('axios');
 const archiver = require('archiver');
 const GitHubRepoParser = require('github-repo-parser');
@@ -24,7 +25,7 @@ app.post('/parse-repo', async (req, res) => {
     
     const data = await parser.collectData(githubUrl);
 
-    await fs.writeFile('overview.json', JSON.stringify(data, null, 2), 'utf-8');
+    await fsp.writeFile('overview.json', JSON.stringify(data, null, 2), 'utf-8');
 
     res.json(data);
   } catch (error) {
@@ -36,9 +37,9 @@ app.post('/download-files', async (req, res) => {
   const downloadAll = req.query.downloadAll === 'true';
 
   try {
-    await fs.mkdir(overviewFilesDir, { recursive: true });
+    await fsp.mkdir(overviewFilesDir, { recursive: true });
 
-    const overviewJson = await fs.readFile('overview.json', 'utf-8');
+    const overviewJson = await fsp.readFile('overview.json', 'utf-8');
     const filesObject = JSON.parse(overviewJson);
 
     const ignoreList = downloadAll ? [] : ['txt', 'md', 'gitignore', 'git', 'json'];
@@ -54,7 +55,7 @@ app.post('/download-files', async (req, res) => {
 
       const fileName = fileUrl.split('/').pop();
 
-      await fs.writeFile(`${overviewFilesDir}/${fileName}`, response.data, { flag: 'w' });
+      await fsp.writeFile(`${overviewFilesDir}/${fileName}`, response.data, { flag: 'w' });
     }
 
     const zipFilePath = 'overview_files.zip';
