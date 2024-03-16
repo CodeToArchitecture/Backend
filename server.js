@@ -6,7 +6,7 @@ const GitHubRepoParser = require('github-repo-parser');
 const app = express();
 const port = 3000;
 
-const YOUR_GITHUB_API_KEY = await fs.readFile('login.txt', 'utf-8').trim();
+const YOUR_GITHUB_API_KEY = '<YOUR_GITHUB_API_KEY>';
 const overviewFilesDir = 'overview_files';
 
 app.use(express.json());
