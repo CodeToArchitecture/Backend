@@ -6,7 +6,7 @@ const GitHubRepoParser = require('github-repo-parser');
 const app = express();
 const port = 3000;
 
-const YOUR_GITHUB_API_KEY = '<YOUR_GITHUB_API_KEY>';
+const YOUR_GITHUB_API_KEY = await fs.readFile('login.txt', 'utf-8').trim();
 const overviewFilesDir = 'overview_files';
 
 app.use(express.json());
@@ -32,7 +32,7 @@ app.post('/parse-repo', async (req, res) => {
 });
 
 app.post('/download-files', async (req, res) => {
-  const downloadAll = req.query.downloadAll === 'true'; // Check for the downloadAll flag in the query string
+  const downloadAll = req.query.downloadAll === 'true';
 
   try {
     await fs.mkdir(overviewFilesDir, { recursive: true });
@@ -40,7 +40,7 @@ app.post('/download-files', async (req, res) => {
     const overviewJson = await fs.readFile('overview.json', 'utf-8');
     const filesObject = JSON.parse(overviewJson);
 
-    const ignoreList = downloadAll ? [] : ['txt', 'md', 'gitignore', 'git', 'json']; // Add or remove extensions as needed
+    const ignoreList = downloadAll ? [] : ['txt', 'md', 'gitignore', 'git', 'json'];
 
     const fileUrls = Object.entries(filesObject)
       .filter(([extension]) => downloadAll || !ignoreList.includes(extension))

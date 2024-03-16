@@ -2,3 +2,4 @@ node_modules/
 overview_files/
 output*.json
 overview.json
+login.txt
