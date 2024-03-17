@@ -9,7 +9,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 const port = 3000;
-const YOUR_GITHUB_API_KEY = '<YOUR_GITHUB_API_KEY>';
+const YOUR_GITHUB_API_KEY = 't';
 const overviewFilesDir = 'overview_files';
 
 app.use(express.json());
@@ -36,6 +36,12 @@ app.post('/parse-repo', async (req, res) => {
 
 app.post('/download-files', async (req, res) => {
   const downloadAll = req.query.downloadAll === 'true';
+
+  try {
+    await fsp.access(overviewFilesDir, fs.constants.F_OK);
+    await fsp.rm(overviewFilesDir, { recursive: true, force: true });
+  } catch (err) {}
+  await fsp.mkdir(overviewFilesDir, { recursive: true });
 
   try {
     await fsp.mkdir(overviewFilesDir, { recursive: true });
@@ -110,7 +116,7 @@ app.post('/combine-and-send', async (req, res) => {
     await fsp.writeFile('combined_code.txt', combinedText, 'utf-8');
 
     const anthropic = new Anthropic({
-      apiKey: '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',
+      apiKey: '',
     });
 
     try {
@@ -134,7 +140,7 @@ app.post('/combine-and-send', async (req, res) => {
 
 app.post('/send', async (req, res) => {
   const anthropic = new Anthropic({
-    apiKey: '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',
+    apiKey: '',
   });
   try {
     const msg = await anthropic.messages.create({
@@ -150,6 +156,8 @@ app.post('/send', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post('/context-to-image', async (req, res) => {});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
