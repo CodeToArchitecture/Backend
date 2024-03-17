@@ -42,20 +42,29 @@ app.post('/download-files', async (req, res) => {
     const overviewJson = await fsp.readFile('overview.json', 'utf-8');
     const filesObject = JSON.parse(overviewJson);
 
-    const ignoreList = downloadAll ? [] : ['txt', 'md', 'gitignore', 'git', 'json'];
+    // Make sure ignoreList contains just the file extensions without the dot
+    const ignoreList = ['txt', 'md', 'gitignore', 'git', 'json', 'pdf', 'csv'];
 
     const fileUrls = Object.entries(filesObject)
       .filter(([extension]) => downloadAll || !ignoreList.includes(extension))
       .flatMap(([_, urls]) => urls);
 
     for (const fileUrl of fileUrls) {
-      const response = await axios.get(fileUrl, {
-        responseType: 'arraybuffer'
-      });
-
-      const fileName = fileUrl.split('/').pop();
-
-      await fsp.writeFile(`${overviewFilesDir}/${fileName}`, response.data, { flag: 'w' });
+      const urlObj = new URL(fileUrl);
+      let fileName = urlObj.pathname.split('/').pop();
+      fileName = decodeURIComponent(fileName);
+    
+      // Define cleanFileName within the loop scope
+      const cleanFileName = fileName.replace(/\?.*$/, '');
+      const fileExtension = cleanFileName.split('.').pop();
+    
+      if (!ignoreList.includes(fileExtension)) {
+        const response = await axios.get(fileUrl, {
+          responseType: 'arraybuffer'
+        });
+    
+        await fsp.writeFile(`${overviewFilesDir}/${cleanFileName}`, response.data, { flag: 'w' });
+      }
     }
 
     const zipFilePath = 'overview_files.zip';
