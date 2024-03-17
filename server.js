@@ -94,6 +94,83 @@ app.post('/download-files', async (req, res) => {
   }
 });
 
+app.post('/process-repo', async (req, res) => {
+  const { githubUrl } = req.body;
+
+  if (!githubUrl) {
+    return res.status(400).json({ error: 'GitHub URL is required' });
+  }
+  
+  try {
+    const parser = new GitHubRepoParser(YOUR_GITHUB_API_KEY);
+    
+    const data = await parser.collectData(githubUrl);
+
+    await fsp.writeFile('overview.json', JSON.stringify(data, null, 2), 'utf-8');
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+  const downloadAll = req.query.downloadAll === 'true';
+
+  try {
+    await fsp.access(overviewFilesDir, fs.constants.F_OK);
+    await fsp.rm(overviewFilesDir, { recursive: true, force: true });
+  } catch (err) {}
+  await fsp.mkdir(overviewFilesDir, { recursive: true });
+
+  try {
+    await fsp.mkdir(overviewFilesDir, { recursive: true });
+
+    const overviewJson = await fsp.readFile('overview.json', 'utf-8');
+    const filesObject = JSON.parse(overviewJson);
+
+    const ignoreExtensions = ['env', 'lock', 'pyc', 'ipynb', 'txt', 'md', 'gitignore', 'json', 'pdf', 'csv'];
+    const ignoreFileNames = ['__init__.py', 'Pipfile.lock'];
+    const ignoreDirectories = ['env', 'venv', '.venv'];
+
+    const fileUrls = Object.entries(filesObject)
+      .filter(([extension]) => downloadAll || !ignoreExtensions.includes(extension))
+      .flatMap(([_, urls]) => urls);
+
+    for (const fileUrl of fileUrls) {
+      const urlObj = new URL(fileUrl);
+      let fileName = urlObj.pathname.split('/').pop();
+      fileName = decodeURIComponent(fileName);
+
+      const cleanFileName = fileName.replace(/\?.*$/, '');
+      const fileExtension = cleanFileName.split('.').pop();
+      const filePathSegments = urlObj.pathname.split('/').map(segment => decodeURIComponent(segment));
+
+      // Check if the file extension, full filename, or any directory in the path should be ignored
+      if (!ignoreExtensions.includes(fileExtension) && 
+          !ignoreFileNames.includes(cleanFileName) &&
+          !filePathSegments.some(segment => ignoreDirectories.includes(segment))) {
+        const response = await axios.get(fileUrl, {
+          responseType: 'arraybuffer'
+        });
+
+        await fsp.writeFile(`${overviewFilesDir}/${cleanFileName}`, response.data, { flag: 'w' });
+      }
+    }
+
+    const zipFilePath = 'overview_files.zip';
+    const output = fs.createWriteStream(zipFilePath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => { throw err; });
+    archive.pipe(output);
+
+    archive.directory(overviewFilesDir, false);
+    await archive.finalize();
+
+    res.json({ message: 'Files downloaded and zipped successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/combine-and-send', async (req, res) => {
   const folderPath = path.resolve(__dirname, 'overview_files');
   let filesText = [];
