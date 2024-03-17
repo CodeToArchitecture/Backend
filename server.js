@@ -246,7 +246,7 @@ app.post('/parse-diagram', async (req, res) => {
           return res.status(500).json({ error: stderr });
         }
 
-        res.send(`${pdfFilename}`);
+        res.send(path.join(__dirname, pdfFilename));
       });
     } else {
       res.status(404).send('Delimiter not found in the text content.');
