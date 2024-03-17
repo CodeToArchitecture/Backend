@@ -2,5 +2,6 @@ node_modules/
 overview_files/
 output*.json
 overview.json
+claudeoutput.json
 *.txt
 overview_files.zip
