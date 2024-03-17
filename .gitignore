@@ -3,5 +3,6 @@ overview_files/
 output*.json
 overview.json
 claudeoutput.json
-*.txt
+combined_code.txt
+
 overview_files.zip
