@@ -4,5 +4,6 @@ output*.json
 overview.json
 claudeoutput.json
 combined_code.txt
-
+diagram.drawio
+diagram.pdf
 overview_files.zip

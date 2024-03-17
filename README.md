@@ -1,5 +1,5 @@
 Setup:
-
+npm init -y
 ```
 chmod 755 setup.sh
 ./setup.sh

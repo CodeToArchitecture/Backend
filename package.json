@@ -15,6 +15,7 @@
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "draw.io-export": "^0.3.0",
+    "drawio": "^1.0.7",
     "express": "^4.18.3",
     "github-repo-parser": "^1.0.7",
     "path": "^0.12.7"
