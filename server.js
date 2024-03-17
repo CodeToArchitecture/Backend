@@ -232,7 +232,7 @@ app.post('/parse-diagram', async (req, res) => {
       const resultText = textContent.substring(startIndex + delimiter.length);
 
       const xmlFilename = 'diagram.drawio';
-      const pdfFilename = 'diagram.pdf';
+      const pdfFilename = 'diagram.png';
 
       await fsp.writeFile(xmlFilename, resultText, 'utf8');
 
